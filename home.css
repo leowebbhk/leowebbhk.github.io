@@ -1,0 +1,16 @@
+body {
+    background-color: black;
+}
+
+h1, p {
+    color: white;
+    font-family: Arial;
+}
+
+button {
+    padding: 1em;
+    border-radius: 0px;
+    border: 0px;
+    margin: 0.5em;
+    background-color:#ab57ff
+}
