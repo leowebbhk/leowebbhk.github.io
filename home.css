@@ -9,7 +9,7 @@ table {
     border: 0.5em solid black;
 }
 
-#mostrecent {
+.mostrecent {
     position: sticky;
     background-color: #ab57ff;
     color: white;
