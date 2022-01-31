@@ -9,6 +9,12 @@ table {
     border: 0.5em solid black;
 }
 
+#mostrecent {
+    position: sticky;
+    background-color: #ab57ff;
+    color: white;
+}
+
 h1, p, td, th {
     color: black;
     font-family: Arial;
