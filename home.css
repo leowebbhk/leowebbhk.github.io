@@ -2,7 +2,7 @@ body {
     background-color: white;
 }
 
-h1, p, td {
+h1, p, td, th {
     color: black;
     font-family: Arial;
 }
@@ -12,5 +12,6 @@ button {
     border-radius: 0px;
     border: 0px;
     margin: 0.5em;
-    background-color:#ab57ff
+    background-color: #ab57ff;
+    color: white;
 }
