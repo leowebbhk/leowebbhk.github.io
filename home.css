@@ -6,6 +6,7 @@ table {
     width: 80%;
     align: center;
     border: 1em solid black;
+}
 
 h1, p, td, th {
     color: black;
