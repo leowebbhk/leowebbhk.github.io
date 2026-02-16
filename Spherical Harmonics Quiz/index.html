@@ -1,0 +1,895 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Spherical Harmonics Quiz</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      background: white;
+      color: black;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    header {
+      text-align: center;
+      padding: 24px 0 16px;
+      background: #ab57ff;
+      margin: -20px -20px 20px -20px;
+      padding: 24px 20px 16px;
+    }
+
+    header h1 {
+      font-size: 1.8rem;
+      color: white;
+      margin-bottom: 4px;
+    }
+
+    header .subtitle {
+      font-size: 0.95rem;
+      color: rgba(255, 255, 255, 0.8);
+    }
+
+    /* Top bar: timer, score, input */
+    .controls {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .timer-box, .score-box {
+      background: white;
+      border: 3px solid black;
+      border-radius: 0;
+      padding: 10px 18px;
+      font-size: 1.3rem;
+      font-weight: 700;
+      min-width: 100px;
+      text-align: center;
+    }
+
+    .timer-box { color: #7b2fd6; }
+    .timer-box.warning { color: #b8860b; }
+    .timer-box.danger { color: #a93226; }
+    .score-box { color: #7b2fd6; }
+
+    .answer-input-wrapper {
+      flex: 1;
+      min-width: 200px;
+    }
+
+    .answer-input-wrapper input {
+      width: 100%;
+      padding: 12px 16px;
+      font-size: 1.1rem;
+      font-family: "Courier New", Courier, monospace;
+      border: 3px solid black;
+      border-radius: 0;
+      background: white;
+      color: black;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .answer-input-wrapper input:focus {
+      border-color: #ab57ff;
+    }
+
+    .answer-input-wrapper input:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .btn {
+      padding: 1em;
+      font-size: 1rem;
+      font-family: inherit;
+      font-weight: 600;
+      border: 0;
+      border-radius: 0;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+      margin: 0;
+    }
+
+    .btn:active { transform: scale(0.97); }
+
+    .btn-start {
+      background: #ab57ff;
+      color: white;
+    }
+    .btn-start:hover { background: #9340e8; }
+
+    .btn-give-up {
+      background: #c0392b;
+      color: white;
+    }
+    .btn-give-up:hover { background: #a93226; }
+
+    .btn-restart {
+      background: black;
+      color: white;
+    }
+    .btn-restart:hover { background: #333; }
+
+    .mode-toggle {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: white;
+      border: 3px solid black;
+      border-radius: 0;
+      padding: 6px 14px;
+      cursor: pointer;
+      user-select: none;
+      transition: border-color 0.2s, background 0.2s;
+    }
+
+    .mode-toggle:hover {
+      border-color: #ab57ff;
+    }
+
+    .mode-toggle.active {
+      border-color: #c0392b;
+      background: #fdecea;
+    }
+
+    .mode-toggle .toggle-track {
+      width: 36px;
+      height: 20px;
+      background: #ccc;
+      border-radius: 10px;
+      position: relative;
+      transition: background 0.2s;
+    }
+
+    .mode-toggle.active .toggle-track {
+      background: #c0392b;
+    }
+
+    .mode-toggle .toggle-knob {
+      width: 16px;
+      height: 16px;
+      background: white;
+      border-radius: 50%;
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      transition: left 0.2s;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    }
+
+    .mode-toggle.active .toggle-knob {
+      left: 18px;
+    }
+
+    .mode-toggle .toggle-label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #333;
+      transition: color 0.2s;
+    }
+
+    .mode-toggle.active .toggle-label {
+      color: #c0392b;
+    }
+
+    /* Flash feedback */
+    .flash-correct {
+      animation: flashGreen 0.4s;
+    }
+    .flash-wrong {
+      animation: flashRed 0.3s;
+    }
+
+    @keyframes flashGreen {
+      0% { border-color: #27ae60; box-shadow: 0 0 12px #27ae60; }
+      100% { border-color: black; box-shadow: none; }
+    }
+    @keyframes flashRed {
+      0% { border-color: #c0392b; box-shadow: 0 0 12px #c0392b; }
+      100% { border-color: black; box-shadow: none; }
+    }
+
+    /* L-sections */
+    .l-section {
+      margin-bottom: 20px;
+    }
+
+    .l-section-heading {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #7b2fd6;
+      margin-bottom: 10px;
+      padding-bottom: 6px;
+      border-bottom: 2px solid black;
+    }
+
+    /* Quiz grid */
+    .quiz-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 12px;
+    }
+
+    .card {
+      background: #f8f4ff;
+      border: 2px solid black;
+      border-radius: 0;
+      padding: 16px 18px;
+      transition: border-color 0.3s, background 0.3s;
+      min-height: 70px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .card .ylm-label {
+      font-size: 1.05rem;
+      color: #333;
+      white-space: nowrap;
+    }
+
+    .card .answer-slot {
+      font-size: 1.05rem;
+      color: #999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .card.solved {
+      border-color: #27ae60;
+      background: #eafaf1;
+    }
+
+    .card.solved .ylm-label {
+      color: #186a3b;
+    }
+
+    .card.solved .answer-slot {
+      color: #186a3b;
+    }
+
+    .card.revealed {
+      border-color: #c0392b;
+      background: #fdecea;
+    }
+
+    .card.revealed .ylm-label {
+      color: #c0392b;
+    }
+
+    .card.revealed .answer-slot {
+      color: #c0392b;
+    }
+
+    /* Help section */
+    .help-section {
+      margin-top: 28px;
+      background: #f8f4ff;
+      border: 2px solid black;
+      border-radius: 0;
+      padding: 18px 22px;
+    }
+
+    .help-section h3 {
+      color: #7b2fd6;
+      margin-bottom: 10px;
+      font-size: 1rem;
+    }
+
+    .help-section p, .help-section li {
+      font-size: 0.9rem;
+      color: #333;
+      line-height: 1.6;
+    }
+
+    .help-section ul {
+      margin-left: 20px;
+      margin-top: 6px;
+    }
+
+    .help-section code {
+      background: #efe4ff;
+      padding: 2px 6px;
+      border-radius: 0;
+      font-size: 0.85rem;
+      color: #5a1da8;
+    }
+
+    .help-section .example-table {
+      margin-top: 10px;
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .help-section .example-table th,
+    .help-section .example-table td {
+      padding: 6px 12px;
+      border: 1px solid black;
+      font-size: 0.85rem;
+    }
+
+    .help-section .example-table th {
+      background: #ab57ff;
+      color: white;
+      text-align: left;
+    }
+
+    .help-section .example-table td {
+      color: #333;
+    }
+
+    .progress-bar-wrapper {
+      width: 100%;
+      height: 6px;
+      background: #e0e0e0;
+      border-radius: 0;
+      margin-bottom: 16px;
+      overflow: hidden;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: #ab57ff;
+      border-radius: 0;
+      transition: width 0.3s;
+      width: 0%;
+    }
+
+    /* Responsive */
+    @media (max-width: 600px) {
+      .quiz-grid { grid-template-columns: 1fr; }
+      .controls { flex-direction: column; align-items: stretch; }
+      .timer-box, .score-box { min-width: auto; }
+      header h1 { font-size: 1.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Spherical Harmonics Quiz</h1>
+      <p class="subtitle">Name all 16 spherical harmonics for ℓ = 0 to 3</p>
+    </header>
+
+    <div class="controls">
+      <div class="timer-box" id="timer">5:00</div>
+      <div class="score-box" id="score">0 / 16</div>
+      <div class="answer-input-wrapper">
+        <input type="text" id="answer-input" placeholder="Type a harmonic, e.g. (1/2)sqrt(3/pi)cos(theta)" disabled autocomplete="off" spellcheck="false">
+      </div>
+      <div class="mode-toggle" id="mode-toggle" title="One wrong answer ends the quiz">
+        <div class="toggle-track"><div class="toggle-knob"></div></div>
+        <span class="toggle-label">Sudden Death</span>
+      </div>
+      <button class="btn btn-start" id="start-btn">Start</button>
+      <button class="btn btn-give-up" id="giveup-btn" style="display:none;">Give Up</button>
+      <button class="btn btn-restart" id="restart-btn" style="display:none;">Play Again</button>
+    </div>
+
+    <div class="progress-bar-wrapper">
+      <div class="progress-bar" id="progress-bar"></div>
+    </div>
+
+    <div id="quiz-sections"></div>
+
+    <div class="help-section">
+      <h3>How to enter answers</h3>
+      <p>Type the spherical harmonic expression and press Enter. The answer is automatically matched to the correct (ℓ, m) slot. Normalization constants are required.</p>
+      <ul>
+        <li>Use <code>sqrt(...)</code> for square roots, e.g. <code>sqrt(3/pi)</code></li>
+        <li>Use <code>theta</code> and <code>phi</code> for the angles θ and φ</li>
+        <li>Use <code>sin</code>, <code>cos</code>, <code>exp</code> for trig and exponential functions</li>
+        <li>Use <code>i</code> for the imaginary unit (e.g. <code>exp(i*phi)</code> or <code>exp(-2*i*phi)</code>)</li>
+        <li>Use <code>*</code> for multiplication, <code>^</code> for exponents: <code>sin(theta)^2</code></li>
+        <li>Fractions: <code>(1/4)</code>, <code>(3/8)</code>, etc.</li>
+      </ul>
+      <table class="example-table">
+        <tr><th>Harmonic</th><th>Example input</th></tr>
+        <tr><td>Y₀⁰</td><td><code>(1/2)sqrt(1/pi)</code></td></tr>
+        <tr><td>Y₁⁰</td><td><code>(1/2)sqrt(3/pi)cos(theta)</code></td></tr>
+        <tr><td>Y₁¹</td><td><code>-(1/2)sqrt(3/(2pi))sin(theta)exp(i*phi)</code></td></tr>
+        <tr><td>Y₂⁰</td><td><code>(1/4)sqrt(5/pi)(3cos(theta)^2 - 1)</code></td></tr>
+      </table>
+    </div>
+  </div>
+
+<script>
+// ── Spherical Harmonics Data ──────────────────────────────────────────
+// Each entry: { l, m, latex, acceptedForms }
+// acceptedForms: array of normalized string forms we check against.
+// We canonicalize user input and compare.
+
+const HARMONICS = [
+  {
+    l: 0, m: 0,
+    latex: "\\frac{1}{2}\\sqrt{\\frac{1}{\\pi}}",
+    canonical: "(1/2)sqrt(1/pi)"
+  },
+  {
+    l: 1, m: -1,
+    latex: "\\frac{1}{2}\\sqrt{\\frac{3}{2\\pi}}\\sin\\theta\\, e^{-i\\phi}",
+    canonical: "(1/2)sqrt(3/(2pi))sin(theta)exp(-i*phi)"
+  },
+  {
+    l: 1, m: 0,
+    latex: "\\frac{1}{2}\\sqrt{\\frac{3}{\\pi}}\\cos\\theta",
+    canonical: "(1/2)sqrt(3/pi)cos(theta)"
+  },
+  {
+    l: 1, m: 1,
+    latex: "-\\frac{1}{2}\\sqrt{\\frac{3}{2\\pi}}\\sin\\theta\\, e^{i\\phi}",
+    canonical: "-(1/2)sqrt(3/(2pi))sin(theta)exp(i*phi)"
+  },
+  {
+    l: 2, m: -2,
+    latex: "\\frac{1}{4}\\sqrt{\\frac{15}{2\\pi}}\\sin^2\\theta\\, e^{-2i\\phi}",
+    canonical: "(1/4)sqrt(15/(2pi))sin(theta)^2*exp(-2*i*phi)"
+  },
+  {
+    l: 2, m: -1,
+    latex: "\\frac{1}{2}\\sqrt{\\frac{15}{2\\pi}}\\sin\\theta\\cos\\theta\\, e^{-i\\phi}",
+    canonical: "(1/2)sqrt(15/(2pi))sin(theta)cos(theta)exp(-i*phi)"
+  },
+  {
+    l: 2, m: 0,
+    latex: "\\frac{1}{4}\\sqrt{\\frac{5}{\\pi}}(3\\cos^2\\theta - 1)",
+    canonical: "(1/4)sqrt(5/pi)(3cos(theta)^2-1)"
+  },
+  {
+    l: 2, m: 1,
+    latex: "-\\frac{1}{2}\\sqrt{\\frac{15}{2\\pi}}\\sin\\theta\\cos\\theta\\, e^{i\\phi}",
+    canonical: "-(1/2)sqrt(15/(2pi))sin(theta)cos(theta)exp(i*phi)"
+  },
+  {
+    l: 2, m: 2,
+    latex: "\\frac{1}{4}\\sqrt{\\frac{15}{2\\pi}}\\sin^2\\theta\\, e^{2i\\phi}",
+    canonical: "(1/4)sqrt(15/(2pi))sin(theta)^2*exp(2*i*phi)"
+  },
+  {
+    l: 3, m: -3,
+    latex: "\\frac{1}{8}\\sqrt{\\frac{35}{\\pi}}\\sin^3\\theta\\, e^{-3i\\phi}",
+    canonical: "(1/8)sqrt(35/pi)sin(theta)^3*exp(-3*i*phi)"
+  },
+  {
+    l: 3, m: -2,
+    latex: "\\frac{1}{4}\\sqrt{\\frac{105}{2\\pi}}\\sin^2\\theta\\cos\\theta\\, e^{-2i\\phi}",
+    canonical: "(1/4)sqrt(105/(2pi))sin(theta)^2*cos(theta)exp(-2*i*phi)"
+  },
+  {
+    l: 3, m: -1,
+    latex: "\\frac{1}{8}\\sqrt{\\frac{21}{\\pi}}\\sin\\theta(5\\cos^2\\theta - 1)\\, e^{-i\\phi}",
+    canonical: "(1/8)sqrt(21/pi)sin(theta)(5cos(theta)^2-1)exp(-i*phi)"
+  },
+  {
+    l: 3, m: 0,
+    latex: "\\frac{1}{4}\\sqrt{\\frac{7}{\\pi}}(5\\cos^3\\theta - 3\\cos\\theta)",
+    canonical: "(1/4)sqrt(7/pi)(5cos(theta)^3-3cos(theta))"
+  },
+  {
+    l: 3, m: 1,
+    latex: "-\\frac{1}{8}\\sqrt{\\frac{21}{\\pi}}\\sin\\theta(5\\cos^2\\theta - 1)\\, e^{i\\phi}",
+    canonical: "-(1/8)sqrt(21/pi)sin(theta)(5cos(theta)^2-1)exp(i*phi)"
+  },
+  {
+    l: 3, m: 2,
+    latex: "\\frac{1}{4}\\sqrt{\\frac{105}{2\\pi}}\\sin^2\\theta\\cos\\theta\\, e^{2i\\phi}",
+    canonical: "(1/4)sqrt(105/(2pi))sin(theta)^2*cos(theta)exp(2*i*phi)"
+  },
+  {
+    l: 3, m: 3,
+    latex: "-\\frac{1}{8}\\sqrt{\\frac{35}{\\pi}}\\sin^3\\theta\\, e^{3i\\phi}",
+    canonical: "-(1/8)sqrt(35/pi)sin(theta)^3*exp(3*i*phi)"
+  }
+];
+
+// ── State ─────────────────────────────────────────────────────────────
+let solved = new Set();    // indices into HARMONICS
+let timerInterval = null;
+let timeLeft = 300;        // 5 minutes in seconds
+let quizActive = false;
+let suddenDeath = false;
+
+// ── DOM refs ──────────────────────────────────────────────────────────
+const sections = document.getElementById("quiz-sections");
+const input = document.getElementById("answer-input");
+const timerEl = document.getElementById("timer");
+const scoreEl = document.getElementById("score");
+const progressBar = document.getElementById("progress-bar");
+const startBtn = document.getElementById("start-btn");
+const giveupBtn = document.getElementById("giveup-btn");
+const restartBtn = document.getElementById("restart-btn");
+const modeToggle = document.getElementById("mode-toggle");
+
+// ── LaTeX helpers ─────────────────────────────────────────────────────
+function ylmLatex(l, m) {
+  const mStr = m < 0 ? `{${m}}` : `{${m}}`;
+  return `Y_{${l}}^${mStr}(\\theta,\\phi)`;
+}
+
+function renderKatex(el, latex) {
+  if (typeof katex !== "undefined") {
+    katex.render(latex, el, { throwOnError: false, displayMode: false });
+  } else {
+    el.textContent = latex;
+  }
+}
+
+// ── Build grid ────────────────────────────────────────────────────────
+function buildGrid() {
+  sections.innerHTML = "";
+
+  // Group harmonics by l
+  const grouped = {};
+  HARMONICS.forEach((h, idx) => {
+    if (!grouped[h.l]) grouped[h.l] = [];
+    grouped[h.l].push({ ...h, idx });
+  });
+
+  for (const l of Object.keys(grouped).sort((a, b) => a - b)) {
+    const section = document.createElement("div");
+    section.className = "l-section";
+
+    const heading = document.createElement("div");
+    heading.className = "l-section-heading";
+    renderKatex(heading, `\\ell = ${l}`);
+
+    const grid = document.createElement("div");
+    grid.className = "quiz-grid";
+
+    for (const h of grouped[l]) {
+      const card = document.createElement("div");
+      card.className = "card";
+      card.id = `card-${h.idx}`;
+
+      const label = document.createElement("div");
+      label.className = "ylm-label";
+      renderKatex(label, `${ylmLatex(h.l, h.m)} =`);
+
+      const slot = document.createElement("div");
+      slot.className = "answer-slot";
+      slot.id = `slot-${h.idx}`;
+      slot.textContent = "?";
+
+      card.appendChild(label);
+      card.appendChild(slot);
+      grid.appendChild(card);
+    }
+
+    section.appendChild(heading);
+    section.appendChild(grid);
+    sections.appendChild(section);
+  }
+}
+
+// ── Robust expression normalization & matching ────────────────────────
+//
+// Strategy: reduce any valid way of writing a spherical harmonic to a
+// single canonical token string so that direct comparison works.
+//
+// Steps:
+//  1. Lowercase, strip whitespace
+//  2. Normalize symbols (π → pi, ** → ^, e^(...) → exp(...))
+//  3. Remove all explicit * (multiplication is always juxtaposition)
+//  4. Strip redundant grouping parens around single factors like (sin(theta)^2)
+//  5. Sort the resulting "factors" so order doesn't matter
+
+function normalize(str) {
+  let s = str.trim().toLowerCase();
+  s = s.replace(/\s+/g, "");
+  s = s.replace(/π/g, "pi");
+  s = s.replace(/\*\*/g, "^");
+
+  // Normalize e^(...)  →  exp(...)
+  // Handle e^(stuff) where stuff may contain nested parens
+  s = s.replace(/e\^/g, "exp");
+  // Now "exp(...)" and "exp(...)" are the same.
+  // But we might have exp(-i*phi) or exp(-iphi) — handle below.
+
+  // Remove all * (juxtaposition is implicit)
+  s = s.replace(/\*/g, "");
+
+  // Remove redundant outer parens around simple factors.
+  // E.g. (sin(theta)^2) → sin(theta)^2
+  // We do this iteratively: find (...) where the content doesn't
+  // contain a top-level operator (i.e. it's a single "atom").
+  // A simple approach: strip parens that wrap an entire balanced group
+  // if removing them doesn't create ambiguity.
+  //
+  // Actually, the safest approach for our domain: extract the "factors"
+  // (top-level multiplicative pieces) and sort them.
+
+  return s;
+}
+
+// ── Factor extraction ────────────────────────────────────────────────
+// Split an expression into its top-level multiplicative factors.
+// Factors are delimited by juxtaposition at the top paren level.
+// E.g. "(1/4)sqrt(5/pi)(3cos(theta)^2-1)" → ["(1/4)", "sqrt(5/pi)", "(3cos(theta)^2-1)"]
+// E.g. "-(1/8)sqrt(21/pi)sin(theta)(5cos(theta)^2-1)exp(iphi)"
+//   → sign = "-", factors = ["(1/8)","sqrt(21/pi)","sin(theta)","(5cos(theta)^2-1)","exp(iphi)"]
+
+function extractFactors(expr) {
+  let s = expr;
+  // Determine leading sign
+  let sign = "+";
+  if (s.startsWith("-")) {
+    sign = "-";
+    s = s.slice(1);
+  } else if (s.startsWith("+")) {
+    s = s.slice(1);
+  }
+
+  const factors = [];
+  let i = 0;
+
+  while (i < s.length) {
+    let start = i;
+
+    if (s[i] === "(") {
+      // Consume balanced parens
+      let depth = 0;
+      while (i < s.length) {
+        if (s[i] === "(") depth++;
+        else if (s[i] === ")") { depth--; if (depth === 0) { i++; break; } }
+        i++;
+      }
+      // Check for trailing ^N or ^(...)
+      if (i < s.length && s[i] === "^") {
+        i++;
+        if (i < s.length && s[i] === "(") {
+          let d2 = 0;
+          while (i < s.length) {
+            if (s[i] === "(") d2++;
+            else if (s[i] === ")") { d2--; if (d2 === 0) { i++; break; } }
+            i++;
+          }
+        } else {
+          while (i < s.length && /[0-9]/.test(s[i])) i++;
+        }
+      }
+    } else if (/[a-z]/.test(s[i])) {
+      // Consume a named function/variable: e.g. sin(theta)^2, sqrt(...), cos(theta), exp(...)
+      while (i < s.length && /[a-z]/.test(s[i])) i++;
+      // If followed by (, consume the balanced parens
+      if (i < s.length && s[i] === "(") {
+        let depth = 0;
+        while (i < s.length) {
+          if (s[i] === "(") depth++;
+          else if (s[i] === ")") { depth--; if (depth === 0) { i++; break; } }
+          i++;
+        }
+      }
+      // Check for trailing ^N
+      if (i < s.length && s[i] === "^") {
+        i++;
+        if (i < s.length && s[i] === "(") {
+          let d2 = 0;
+          while (i < s.length) {
+            if (s[i] === "(") d2++;
+            else if (s[i] === ")") { d2--; if (d2 === 0) { i++; break; } }
+            i++;
+          }
+        } else {
+          while (i < s.length && /[0-9]/.test(s[i])) i++;
+        }
+      }
+    } else if (/[0-9]/.test(s[i])) {
+      // Consume a number
+      while (i < s.length && /[0-9.]/.test(s[i])) i++;
+    } else {
+      // Unknown char, just advance
+      i++;
+    }
+
+    if (i > start) {
+      factors.push(s.slice(start, i));
+    }
+  }
+
+  return { sign, factors };
+}
+
+// Normalize a single factor: strip unnecessary outer parens if the
+// contents are a single balanced unit (no top-level additive ops).
+function normalizeFactor(f) {
+  // Strip outer parens if they wrap the entire factor AND the inside
+  // has no top-level +/- (i.e., it's not a polynomial like (3cos^2-1))
+  if (f.startsWith("(") && f.endsWith(")")) {
+    const inner = f.slice(1, -1);
+    // Check balance
+    let depth = 0;
+    let balanced = true;
+    let hasTopLevelOp = false;
+    for (let i = 0; i < inner.length; i++) {
+      if (inner[i] === "(") depth++;
+      else if (inner[i] === ")") { depth--; if (depth < 0) { balanced = false; break; } }
+      else if (depth === 0 && (inner[i] === "+" || inner[i] === "-") && i > 0) {
+        hasTopLevelOp = true;
+      }
+    }
+    if (balanced && depth === 0 && !hasTopLevelOp) {
+      return inner;
+    }
+  }
+  return f;
+}
+
+function canonicalize(raw) {
+  let s = normalize(raw);
+  if (!s) return "";
+
+  const { sign, factors } = extractFactors(s);
+
+  // Normalize each factor and sort them for order-independence
+  const normFactors = factors.map(normalizeFactor).sort();
+
+  return sign + normFactors.join("|");
+}
+
+function checkAnswer(userRaw) {
+  const userCanon = canonicalize(userRaw);
+  if (!userCanon || userCanon === "+" || userCanon === "-") return -1;
+
+  for (let i = 0; i < HARMONICS.length; i++) {
+    if (solved.has(i)) continue;
+    if (canonicalize(HARMONICS[i].canonical) === userCanon) {
+      return i;
+    }
+  }
+  return -1;
+}
+
+// ── Timer ─────────────────────────────────────────────────────────────
+function formatTime(sec) {
+  const m = Math.floor(sec / 60);
+  const s = sec % 60;
+  return `${m}:${s.toString().padStart(2, "0")}`;
+}
+
+function updateTimer() {
+  timerEl.textContent = formatTime(timeLeft);
+  timerEl.className = "timer-box";
+  if (timeLeft <= 30) timerEl.classList.add("danger");
+  else if (timeLeft <= 60) timerEl.classList.add("warning");
+}
+
+function tick() {
+  timeLeft--;
+  updateTimer();
+  if (timeLeft <= 0) {
+    endQuiz(false);
+  }
+}
+
+// ── Score ─────────────────────────────────────────────────────────────
+function updateScore() {
+  scoreEl.textContent = `${solved.size} / 16`;
+  progressBar.style.width = `${(solved.size / 16) * 100}%`;
+}
+
+// ── Quiz lifecycle ────────────────────────────────────────────────────
+function startQuiz() {
+  solved = new Set();
+  timeLeft = 300;
+  quizActive = true;
+  suddenDeath = modeToggle.classList.contains("active");
+
+  buildGrid();
+  updateScore();
+  updateTimer();
+
+  input.disabled = false;
+  input.value = "";
+  input.focus();
+
+  startBtn.style.display = "none";
+  giveupBtn.style.display = "inline-block";
+  restartBtn.style.display = "none";
+  modeToggle.style.pointerEvents = "none";
+  modeToggle.style.opacity = "0.5";
+
+  timerInterval = setInterval(tick, 1000);
+}
+
+function endQuiz(won, suddenDeathStrike = false) {
+  quizActive = false;
+  clearInterval(timerInterval);
+  input.disabled = true;
+  giveupBtn.style.display = "none";
+  restartBtn.style.display = "inline-block";
+  modeToggle.style.pointerEvents = "";
+  modeToggle.style.opacity = "";
+
+  // Reveal unsolved
+  HARMONICS.forEach((h, idx) => {
+    if (!solved.has(idx)) {
+      const card = document.getElementById(`card-${idx}`);
+      const slot = document.getElementById(`slot-${idx}`);
+      card.classList.add("revealed");
+      renderKatex(slot, h.latex);
+    }
+  });
+
+  if (won) {
+    const elapsed = 300 - timeLeft;
+    const modeLabel = suddenDeath ? " (Sudden Death)" : "";
+    input.value = `All 16 correct${modeLabel}! Time: ${formatTime(elapsed)}`;
+  } else if (suddenDeathStrike) {
+    input.value = `Sudden Death! Wrong answer. You got ${solved.size}/16.`;
+  } else if (timeLeft <= 0) {
+    input.value = `Time's up! You got ${solved.size}/16.`;
+  } else {
+    input.value = `You got ${solved.size}/16.`;
+  }
+}
+
+// ── Input handling ────────────────────────────────────────────────────
+input.addEventListener("keydown", (e) => {
+  if (e.key === "Enter" && quizActive) {
+    const val = input.value;
+    const matchIdx = checkAnswer(val);
+
+    if (matchIdx >= 0) {
+      solved.add(matchIdx);
+      const h = HARMONICS[matchIdx];
+      const card = document.getElementById(`card-${matchIdx}`);
+      const slot = document.getElementById(`slot-${matchIdx}`);
+      card.classList.add("solved");
+      renderKatex(slot, h.latex);
+      updateScore();
+      input.value = "";
+
+      // Flash green
+      input.classList.remove("flash-correct", "flash-wrong");
+      void input.offsetWidth;
+      input.classList.add("flash-correct");
+
+      if (solved.size === 16) {
+        endQuiz(true);
+      }
+    } else if (val.trim()) {
+      // Flash red
+      input.classList.remove("flash-correct", "flash-wrong");
+      void input.offsetWidth;
+      input.classList.add("flash-wrong");
+
+      if (suddenDeath) {
+        endQuiz(false, true);
+      }
+    }
+  }
+});
+
+// ── Button handlers ───────────────────────────────────────────────────
+startBtn.addEventListener("click", startQuiz);
+giveupBtn.addEventListener("click", () => endQuiz(false));
+restartBtn.addEventListener("click", startQuiz);
+modeToggle.addEventListener("click", () => {
+  modeToggle.classList.toggle("active");
+});
+
+// ── Initial render ────────────────────────────────────────────────────
+buildGrid();
+updateScore();
+updateTimer();
+</script>
+</body>
+</html>
